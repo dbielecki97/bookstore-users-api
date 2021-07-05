@@ -1,18 +1,16 @@
 package users
 
 import (
-	"database/sql"
 	"fmt"
 	"github.com/dbielecki97/bookstore-users-api/datasource/mysql/userdb"
 	"github.com/dbielecki97/bookstore-users-api/utils/date"
 	"github.com/dbielecki97/bookstore-users-api/utils/errors"
-	"strings"
+	"github.com/dbielecki97/bookstore-users-api/utils/mysql/errs"
 )
 
 const (
-	insertUser       = "INSERT INTO users(first_name, last_name, email, date_created) VALUES(?, ?, ?, ?)"
-	getUser          = "SELECT id, first_name, last_name, email, date_created FROM users where id = ? "
-	emailUniqueEmail = "email_unique"
+	insertUser = "INSERT INTO users(first_name, last_name, email, date_created) VALUES(?, ?, ?, ?)"
+	getUser    = "SELECT id, first_name, last_name, email, date_created FROM users where id = ? "
 )
 
 func (u *User) Get() *errors.RestErr {
@@ -28,14 +26,12 @@ func (u *User) Get() *errors.RestErr {
 
 	row := stmt.QueryRowx(u.ID)
 	if err := row.StructScan(u); err != nil {
-		if err == sql.ErrNoRows {
-			return errors.NewNotFoundError(fmt.Sprintf("user with id %d not found", u.ID))
-		}
-		return errors.NewInternalServerError(fmt.Sprintf("error when tring to get uset %d: %s", u.ID, err))
+		return errs.ParseError(err)
 	}
 
 	return nil
 }
+
 func (u *User) Save() *errors.RestErr {
 	stmt, err := userdb.Client.Prepare(insertUser)
 	if err != nil {
@@ -47,10 +43,7 @@ func (u *User) Save() *errors.RestErr {
 
 	result, err := stmt.Exec(u.FirstName, u.LastName, u.Email, u.DateCreated)
 	if err != nil {
-		if strings.Contains(err.Error(), emailUniqueEmail) {
-			return errors.NewBadRequestError(fmt.Sprintf("email %s already exists", u.Email))
-		}
-		return errors.NewInternalServerError(fmt.Sprintf("error when trying save user: %s", err))
+		return errs.ParseError(err)
 	}
 
 	userId, err := result.LastInsertId()
