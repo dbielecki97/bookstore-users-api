@@ -15,7 +15,7 @@ func Create(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&user); err != nil {
 		fmt.Println(err)
-		restErr := errors.NewBadRequest("invalid JSON body")
+		restErr := errors.NewBadRequestError("invalid JSON body")
 		c.JSON(restErr.StatusCode, restErr)
 		return
 	}
@@ -32,7 +32,7 @@ func Create(c *gin.Context) {
 func Get(c *gin.Context) {
 	userId, err := strconv.ParseInt(c.Param("user_id"), 10, 64)
 	if err != nil {
-		restErr := errors.NewBadRequest("invalid user id")
+		restErr := errors.NewBadRequestError("invalid user id")
 		fmt.Println(restErr)
 		c.JSON(restErr.StatusCode, restErr)
 		return
