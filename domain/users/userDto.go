@@ -7,10 +7,10 @@ import (
 
 type User struct {
 	ID          int64  `json:"id,omitempty"`
-	FirstName   string `json:"first_name,omitempty"`
-	LastName    string `json:"last_name,omitempty"`
+	FirstName   string `json:"first_name,omitempty" db:"first_name"`
+	LastName    string `json:"last_name,omitempty" db:"last_name"`
 	Email       string `json:"email,omitempty"`
-	DateCreated string `json:"date_created,omitempty"`
+	DateCreated string `json:"date_created,omitempty" db:"date_created"`
 }
 
 func (u *User) Validate() *errors.RestErr {

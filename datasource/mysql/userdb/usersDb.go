@@ -1,9 +1,9 @@
 package userdb
 
 import (
-	"database/sql"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/jmoiron/sqlx"
 	"log"
 	"os"
 )
@@ -16,7 +16,7 @@ const (
 )
 
 var (
-	Client   *sql.DB
+	Client   *sqlx.DB
 	username = os.Getenv(mysqlUsersUsername)
 	password = os.Getenv(mysqlUsersPassword)
 	host     = os.Getenv(mysqlUsersHost)
@@ -31,7 +31,7 @@ func init() {
 		host,
 		schema)
 
-	Client, err = sql.Open("mysql", dataSourceName)
+	Client, err = sqlx.Open("mysql", dataSourceName)
 	if err != nil {
 		panic(err)
 	}

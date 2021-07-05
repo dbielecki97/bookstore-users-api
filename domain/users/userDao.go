@@ -1,6 +1,7 @@
 package users
 
 import (
+	"database/sql"
 	"fmt"
 	"github.com/dbielecki97/bookstore-users-api/datasource/mysql/userdb"
 	"github.com/dbielecki97/bookstore-users-api/utils/date"
@@ -9,13 +10,9 @@ import (
 )
 
 const (
-	insertUser = "INSERT INTO users(first_name, last_name, email, date_created) VALUES(?, ?, ?, ?)"
-
+	insertUser       = "INSERT INTO users(first_name, last_name, email, date_created) VALUES(?, ?, ?, ?)"
+	getUser          = "SELECT id, first_name, last_name, email, date_created FROM users where id = ? "
 	emailUniqueEmail = "email_unique"
-)
-
-var (
-	usersDB = make(map[int64]*User)
 )
 
 func (u *User) Get() *errors.RestErr {
@@ -23,16 +20,19 @@ func (u *User) Get() *errors.RestErr {
 		panic(err)
 	}
 
-	result := usersDB[u.ID]
-	if result == nil {
-		return errors.NewNotFoundError(fmt.Sprintf("user %d not found", u.ID))
+	stmt, err := userdb.Client.Preparex(getUser)
+	if err != nil {
+		return errors.NewInternalServerError(err.Error())
 	}
+	defer stmt.Close()
 
-	u.ID = result.ID
-	u.Email = result.Email
-	u.LastName = result.LastName
-	u.FirstName = result.FirstName
-	u.DateCreated = result.DateCreated
+	row := stmt.QueryRowx(u.ID)
+	if err := row.StructScan(u); err != nil {
+		if err == sql.ErrNoRows {
+			return errors.NewNotFoundError(fmt.Sprintf("user with id %d not found", u.ID))
+		}
+		return errors.NewInternalServerError(fmt.Sprintf("error when tring to get uset %d: %s", u.ID, err))
+	}
 
 	return nil
 }
