@@ -9,8 +9,9 @@ import (
 )
 
 const (
-	insertUser = "INSERT INTO users(first_name, last_name, email, date_created) VALUES(?, ?, ?, ?)"
-	getUser    = "SELECT id, first_name, last_name, email, date_created FROM users where id = ? "
+	insertUser = "INSERT INTO users(first_name, last_name, email, date_created) VALUES(?, ?, ?, ?);"
+	getUser    = "SELECT id, first_name, last_name, email, date_created FROM users where id = ?;"
+	updateUser = "UPDATE users SET first_name = ?, last_name = ?, email = ? where id = ?;"
 )
 
 func (u *User) Get() *errors.RestErr {
@@ -52,6 +53,21 @@ func (u *User) Save() *errors.RestErr {
 	}
 
 	u.ID = userId
+
+	return nil
+}
+
+func (u *User) Update() *errors.RestErr {
+	stmt, err := userdb.Client.Prepare(updateUser)
+	if err != nil {
+		return errors.NewInternalServerError(err.Error())
+	}
+	defer stmt.Close()
+
+	_, err = stmt.Exec(u.FirstName, u.LastName, u.Email, u.ID)
+	if err != nil {
+		return errs.ParseError(err)
+	}
 
 	return nil
 }

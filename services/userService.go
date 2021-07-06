@@ -25,3 +25,49 @@ func GetUser(userId int64) (*users.User, *errors.RestErr) {
 
 	return &result, nil
 }
+
+func UpdateUser(u users.User) (*users.User, *errors.RestErr) {
+	cur, err := GetUser(u.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := u.Validate(); err != nil {
+		return nil, err
+	}
+
+	cur.FirstName = u.FirstName
+	cur.LastName = u.LastName
+	cur.Email = u.Email
+
+	if err := cur.Update(); err != nil {
+		return nil, err
+	}
+
+	return cur, nil
+}
+
+func PatchUser(u users.User) (*users.User, *errors.RestErr) {
+	cur, err := GetUser(u.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	if u.FirstName != "" {
+		cur.FirstName = u.FirstName
+	}
+
+	if u.LastName != "" {
+		cur.LastName = u.LastName
+	}
+
+	if u.Email != "" {
+		cur.Email = u.Email
+	}
+
+	if err := cur.Update(); err != nil {
+		return nil, err
+	}
+
+	return cur, nil
+}

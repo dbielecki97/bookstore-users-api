@@ -11,4 +11,6 @@ func createUrlMappings() {
 	router.GET("/users/:user_id", user.Get)
 	router.GET("/users/search", user.Search)
 	router.POST("/users", user.Create)
+	router.PUT("/users/:user_id", user.Update)
+	router.PATCH("/users/:user_id", user.Update)
 }
