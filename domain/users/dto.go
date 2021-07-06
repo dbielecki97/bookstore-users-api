@@ -9,6 +9,8 @@ const (
 	StatusActive = "active"
 )
 
+type Users []User
+
 type User struct {
 	ID          int64  `json:"id,omitempty"`
 	FirstName   string `json:"first_name,omitempty" db:"first_name"`

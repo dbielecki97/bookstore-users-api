@@ -52,6 +52,7 @@ func (u *User) Save() *errors.RestErr {
 	}
 
 	u.ID = userId
+	u.Password = ""
 
 	return nil
 }

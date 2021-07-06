@@ -25,7 +25,7 @@ func Create(c *gin.Context) {
 		c.JSON(err.StatusCode, err)
 		return
 	}
-
+	result.HideFields(c.GetHeader("X-Public") == "true")
 	c.JSON(http.StatusCreated, result)
 }
 
@@ -44,6 +44,7 @@ func Get(c *gin.Context) {
 		return
 	}
 
+	result.HideFields(c.GetHeader("X-Public") == "true")
 	c.JSON(http.StatusOK, result)
 }
 
@@ -82,6 +83,7 @@ func Update(c *gin.Context) {
 		}
 	}
 
+	result.HideFields(c.GetHeader("X-Public") == "true")
 	c.JSON(http.StatusOK, result)
 }
 
@@ -112,6 +114,7 @@ func Search(c *gin.Context) {
 		return
 	}
 
+	results = results.HideFields(c.GetHeader("X-Public") == "true")
 	c.JSON(http.StatusOK, results)
 }
 

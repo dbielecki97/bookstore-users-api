@@ -4,6 +4,7 @@ import (
 	"github.com/dbielecki97/bookstore-users-api/domain/users"
 	"github.com/dbielecki97/bookstore-users-api/utils/date"
 	"github.com/dbielecki97/bookstore-users-api/utils/errors"
+	"github.com/dbielecki97/bookstore-users-api/utils/pass"
 )
 
 func CreateUser(user users.User) (*users.User, *errors.RestErr) {
@@ -13,6 +14,8 @@ func CreateUser(user users.User) (*users.User, *errors.RestErr) {
 
 	user.DateCreated = date.GetNowDBString()
 	user.Status = users.StatusActive
+	user.Password = pass.GetMD5(user.Password)
+
 	if err := user.Save(); err != nil {
 		return nil, err
 	}
@@ -80,7 +83,7 @@ func DeleteUser(userId int64) *errors.RestErr {
 	return user.Delete()
 }
 
-func Search(status string) ([]users.User, *errors.RestErr) {
+func Search(status string) (users.Users, *errors.RestErr) {
 	dao := &users.User{}
 	return dao.FindByStatus(status)
 }
