@@ -3,15 +3,16 @@ package users
 import (
 	"fmt"
 	"github.com/dbielecki97/bookstore-users-api/datasource/mysql/userdb"
-	"github.com/dbielecki97/bookstore-users-api/utils/date"
 	"github.com/dbielecki97/bookstore-users-api/utils/errors"
 	"github.com/dbielecki97/bookstore-users-api/utils/mysql/errs"
 )
 
 const (
-	insertUser = "INSERT INTO users(first_name, last_name, email, date_created) VALUES(?, ?, ?, ?);"
-	getUser    = "SELECT id, first_name, last_name, email, date_created FROM users where id = ?;"
-	updateUser = "UPDATE users SET first_name = ?, last_name = ?, email = ? where id = ?;"
+	insertUser       = "INSERT INTO users(first_name, last_name, email, date_created, password, status) VALUES(?, ?, ?, ?, ?, ?);"
+	getUser          = "SELECT id, first_name, last_name, email, date_created, status FROM users WHERE id = ?;"
+	updateUser       = "UPDATE users SET first_name = ?, last_name = ?, email = ?, password = ? WHERE id = ?;"
+	deleteUser       = "DELETE FROM users where id = ?;"
+	findUserByStatus = "SELECT id, first_name, last_name, email, date_created, status FROM users WHERE status = ?;"
 )
 
 func (u *User) Get() *errors.RestErr {
@@ -40,9 +41,7 @@ func (u *User) Save() *errors.RestErr {
 	}
 	defer stmt.Close()
 
-	u.DateCreated = date.GetNowString()
-
-	result, err := stmt.Exec(u.FirstName, u.LastName, u.Email, u.DateCreated)
+	result, err := stmt.Exec(u.FirstName, u.LastName, u.Email, u.DateCreated, u.Password, u.Status)
 	if err != nil {
 		return errs.ParseError(err)
 	}
@@ -70,4 +69,49 @@ func (u *User) Update() *errors.RestErr {
 	}
 
 	return nil
+}
+
+func (u *User) Delete() *errors.RestErr {
+	stmt, err := userdb.Client.Prepare(deleteUser)
+	if err != nil {
+		return errors.NewInternalServerError(err.Error())
+	}
+	defer stmt.Close()
+
+	_, err = stmt.Exec(u.ID)
+	if err != nil {
+		return errs.ParseError(err)
+	}
+
+	return nil
+}
+
+func (u *User) FindByStatus(status string) ([]User, *errors.RestErr) {
+	stmt, err := userdb.Client.Preparex(findUserByStatus)
+	if err != nil {
+		return nil, errors.NewInternalServerError(err.Error())
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.Queryx(status)
+	if err != nil {
+		return nil, errors.NewInternalServerError(err.Error())
+	}
+	defer rows.Close()
+
+	results := make([]User, 0)
+	for rows.Next() {
+		var user User
+		err := rows.StructScan(&user)
+		if err != nil {
+			return nil, errs.ParseError(err)
+		}
+		results = append(results, user)
+	}
+
+	if len(results) == 0 {
+		return nil, errors.NewNotFoundError(fmt.Sprintf("no users matching status %s", status))
+	}
+
+	return results, nil
 }

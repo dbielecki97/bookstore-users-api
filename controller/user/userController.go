@@ -30,11 +30,10 @@ func Create(c *gin.Context) {
 }
 
 func Get(c *gin.Context) {
-	userId, err := strconv.ParseInt(c.Param("user_id"), 10, 64)
-	if err != nil {
-		restErr := errors.NewBadRequestError("invalid user id")
-		fmt.Println(restErr)
-		c.JSON(restErr.StatusCode, restErr)
+	userId, idErr := getUserId(c.Param("user_id"))
+	if idErr != nil {
+		fmt.Println(idErr)
+		c.JSON(idErr.StatusCode, idErr)
 		return
 	}
 
@@ -48,16 +47,11 @@ func Get(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
-func Search(c *gin.Context) {
-	c.String(http.StatusNotImplemented, "implement me!")
-}
-
 func Update(c *gin.Context) {
-	userId, err := strconv.ParseInt(c.Param("user_id"), 10, 64)
-	if err != nil {
-		restErr := errors.NewBadRequestError("invalid user id")
-		fmt.Println(restErr)
-		c.JSON(restErr.StatusCode, restErr)
+	userId, idErr := getUserId(c.Param("user_id"))
+	if idErr != nil {
+		fmt.Println(idErr)
+		c.JSON(idErr.StatusCode, idErr)
 		return
 	}
 
@@ -72,8 +66,8 @@ func Update(c *gin.Context) {
 
 	user.ID = userId
 
-	var result *users.User
 	var restErr *errors.RestErr
+	var result *users.User
 	if c.Request.Method == http.MethodPatch {
 		result, restErr = services.PatchUser(user)
 		if restErr != nil {
@@ -89,4 +83,44 @@ func Update(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, result)
+}
+
+func Delete(c *gin.Context) {
+	userId, idErr := getUserId(c.Param("user_id"))
+	if idErr != nil {
+		fmt.Println(idErr)
+		c.JSON(idErr.StatusCode, idErr)
+		return
+	}
+
+	if err := services.DeleteUser(userId); err != nil {
+		fmt.Println(err)
+		c.JSON(err.StatusCode, err)
+		return
+
+	}
+	c.JSON(http.StatusOK, map[string]string{"status": "deleted"})
+}
+
+func Search(c *gin.Context) {
+	status := c.Query("status")
+
+	results, err := services.Search(status)
+	if err != nil {
+		fmt.Println(err)
+		c.JSON(err.StatusCode, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, results)
+}
+
+func getUserId(param string) (int64, *errors.RestErr) {
+	userId, err := strconv.ParseInt(param, 10, 64)
+	if err != nil {
+		restErr := errors.NewBadRequestError("invalid user id")
+
+		return 0, restErr
+	}
+	return userId, nil
 }
