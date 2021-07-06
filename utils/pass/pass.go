@@ -1,14 +1,25 @@
 package pass
 
 import (
-	"crypto/md5"
-	"encoding/hex"
+	"fmt"
+	"github.com/dbielecki97/bookstore-users-api/utils/errors"
+	"golang.org/x/crypto/bcrypt"
 )
 
-func GetMD5(input string) string {
-	hash := md5.New()
-	defer hash.Reset()
+func Generate(s string) (string, *errors.RestErr) {
+	saltedBytes := []byte(s)
+	hashedBytes, err := bcrypt.GenerateFromPassword(saltedBytes, bcrypt.DefaultCost)
+	if err != nil {
+		fmt.Println(err)
+		return "", errors.NewInternalServerError("error processing request")
+	}
 
-	hash.Write([]byte(input))
-	return hex.EncodeToString(hash.Sum(nil))
+	hash := string(hashedBytes[:])
+	return hash, nil
+}
+
+func Compare(hash string, s string) error {
+	incoming := []byte(s)
+	existing := []byte(hash)
+	return bcrypt.CompareHashAndPassword(existing, incoming)
 }

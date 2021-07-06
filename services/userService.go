@@ -14,7 +14,11 @@ func CreateUser(user users.User) (*users.User, *errors.RestErr) {
 
 	user.DateCreated = date.GetNowDBString()
 	user.Status = users.StatusActive
-	user.Password = pass.GetMD5(user.Password)
+	enPass, err := pass.Generate(user.Password)
+	if err != nil {
+		return nil, err
+	}
+	user.Password = enPass
 
 	if err := user.Save(); err != nil {
 		return nil, err
