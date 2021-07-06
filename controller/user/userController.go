@@ -1,7 +1,6 @@
 package user
 
 import (
-	"fmt"
 	"github.com/dbielecki97/bookstore-users-api/domain/users"
 	"github.com/dbielecki97/bookstore-users-api/services"
 	"github.com/dbielecki97/bookstore-users-api/utils/errors"
@@ -14,7 +13,6 @@ func Create(c *gin.Context) {
 	var user users.User
 
 	if err := c.ShouldBindJSON(&user); err != nil {
-		fmt.Println(err)
 		restErr := errors.NewBadRequestError("invalid JSON body")
 		c.JSON(restErr.StatusCode, restErr)
 		return
@@ -32,14 +30,12 @@ func Create(c *gin.Context) {
 func Get(c *gin.Context) {
 	userId, idErr := getUserId(c.Param("user_id"))
 	if idErr != nil {
-		fmt.Println(idErr)
 		c.JSON(idErr.StatusCode, idErr)
 		return
 	}
 
 	result, restErr := services.UserService.GetUser(userId)
 	if restErr != nil {
-		fmt.Println(restErr)
 		c.JSON(restErr.StatusCode, restErr)
 		return
 	}
@@ -51,7 +47,6 @@ func Get(c *gin.Context) {
 func Update(c *gin.Context) {
 	userId, idErr := getUserId(c.Param("user_id"))
 	if idErr != nil {
-		fmt.Println(idErr)
 		c.JSON(idErr.StatusCode, idErr)
 		return
 	}
@@ -59,7 +54,6 @@ func Update(c *gin.Context) {
 	var user users.User
 
 	if err := c.ShouldBindJSON(&user); err != nil {
-		fmt.Println(err)
 		restErr := errors.NewBadRequestError("invalid JSON body")
 		c.JSON(restErr.StatusCode, restErr)
 		return
@@ -90,13 +84,11 @@ func Update(c *gin.Context) {
 func Delete(c *gin.Context) {
 	userId, idErr := getUserId(c.Param("user_id"))
 	if idErr != nil {
-		fmt.Println(idErr)
 		c.JSON(idErr.StatusCode, idErr)
 		return
 	}
 
 	if err := services.UserService.DeleteUser(userId); err != nil {
-		fmt.Println(err)
 		c.JSON(err.StatusCode, err)
 		return
 
@@ -109,7 +101,6 @@ func Search(c *gin.Context) {
 
 	results, err := services.UserService.Search(status)
 	if err != nil {
-		fmt.Println(err)
 		c.JSON(err.StatusCode, err)
 		return
 	}
