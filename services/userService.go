@@ -7,7 +7,22 @@ import (
 	"github.com/dbielecki97/bookstore-users-api/utils/pass"
 )
 
-func CreateUser(user users.User) (*users.User, *errors.RestErr) {
+var (
+	UserService userService = &defaultUserService{}
+)
+
+type userService interface {
+	CreateUser(user users.User) (*users.User, *errors.RestErr)
+	GetUser(userId int64) (*users.User, *errors.RestErr)
+	UpdateUser(u users.User) (*users.User, *errors.RestErr)
+	PatchUser(u users.User) (*users.User, *errors.RestErr)
+	DeleteUser(userId int64) *errors.RestErr
+	Search(status string) (users.Users, *errors.RestErr)
+}
+
+type defaultUserService struct{}
+
+func (s *defaultUserService) CreateUser(user users.User) (*users.User, *errors.RestErr) {
 	if err := user.Validate(); err != nil {
 		return nil, err
 	}
@@ -27,7 +42,7 @@ func CreateUser(user users.User) (*users.User, *errors.RestErr) {
 	return &user, nil
 }
 
-func GetUser(userId int64) (*users.User, *errors.RestErr) {
+func (s *defaultUserService) GetUser(userId int64) (*users.User, *errors.RestErr) {
 	result := users.User{ID: userId}
 	if err := result.Get(); err != nil {
 		return nil, err
@@ -36,8 +51,8 @@ func GetUser(userId int64) (*users.User, *errors.RestErr) {
 	return &result, nil
 }
 
-func UpdateUser(u users.User) (*users.User, *errors.RestErr) {
-	cur, err := GetUser(u.ID)
+func (s *defaultUserService) UpdateUser(u users.User) (*users.User, *errors.RestErr) {
+	cur, err := s.GetUser(u.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -57,8 +72,8 @@ func UpdateUser(u users.User) (*users.User, *errors.RestErr) {
 	return cur, nil
 }
 
-func PatchUser(u users.User) (*users.User, *errors.RestErr) {
-	cur, err := GetUser(u.ID)
+func (s *defaultUserService) PatchUser(u users.User) (*users.User, *errors.RestErr) {
+	cur, err := s.GetUser(u.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -82,12 +97,12 @@ func PatchUser(u users.User) (*users.User, *errors.RestErr) {
 	return cur, nil
 }
 
-func DeleteUser(userId int64) *errors.RestErr {
+func (s *defaultUserService) DeleteUser(userId int64) *errors.RestErr {
 	user := users.User{ID: userId}
 	return user.Delete()
 }
 
-func Search(status string) (users.Users, *errors.RestErr) {
+func (s *defaultUserService) Search(status string) (users.Users, *errors.RestErr) {
 	dao := &users.User{}
 	return dao.FindByStatus(status)
 }
