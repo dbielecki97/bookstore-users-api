@@ -18,6 +18,7 @@ type userService interface {
 	PatchUser(u users.User) (*users.User, *errors.RestErr)
 	DeleteUser(userId int64) *errors.RestErr
 	Search(status string) (users.Users, *errors.RestErr)
+	FindByEmail(users.LoginRequest) (*users.User, *errors.RestErr)
 }
 
 type defaultUserService struct{}
@@ -31,7 +32,7 @@ func (s *defaultUserService) CreateUser(user users.User) (*users.User, *errors.R
 	user.Status = users.StatusActive
 	enPass, err := pass.Generate(user.Password)
 	if err != nil {
-		return nil, err
+		return nil, errors.NewInternalServerError("error processing request")
 	}
 	user.Password = enPass
 
@@ -105,4 +106,19 @@ func (s *defaultUserService) DeleteUser(userId int64) *errors.RestErr {
 func (s *defaultUserService) Search(status string) (users.Users, *errors.RestErr) {
 	dao := &users.User{}
 	return dao.FindByStatus(status)
+}
+
+func (s *defaultUserService) FindByEmail(r users.LoginRequest) (*users.User, *errors.RestErr) {
+	u := &users.User{Email: r.Email}
+
+	if err := u.FindByEmail(); err != nil {
+		return nil, err
+	}
+
+	err := pass.Compare(u.Password, r.Password)
+	if err != nil {
+		return nil, errors.NewAuthenticationError("invalid credentials")
+	}
+
+	return u, nil
 }

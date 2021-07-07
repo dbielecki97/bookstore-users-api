@@ -1,17 +1,16 @@
 package pass
 
 import (
-	"fmt"
-	"github.com/dbielecki97/bookstore-users-api/utils/errors"
+	"github.com/dbielecki97/bookstore-users-api/logger"
 	"golang.org/x/crypto/bcrypt"
 )
 
-func Generate(s string) (string, *errors.RestErr) {
+func Generate(s string) (string, error) {
 	saltedBytes := []byte(s)
 	hashedBytes, err := bcrypt.GenerateFromPassword(saltedBytes, bcrypt.DefaultCost)
 	if err != nil {
-		fmt.Println(err)
-		return "", errors.NewInternalServerError("error processing request")
+		logger.Error("error when hashing password", err)
+		return "", err
 	}
 
 	hash := string(hashedBytes[:])

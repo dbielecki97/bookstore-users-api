@@ -33,3 +33,19 @@ func NewNotFoundError(message string) *RestErr {
 		Error:      "not_found",
 	}
 }
+
+func NewAuthenticationError(message string) *RestErr {
+	return &RestErr{
+		Message:    message,
+		StatusCode: http.StatusUnauthorized,
+		Error:      "unauthorized",
+	}
+}
+
+func NewAuthorizationError(message string) *RestErr {
+	return &RestErr{
+		Message:    message,
+		StatusCode: http.StatusForbidden,
+		Error:      "forbidden",
+	}
+}

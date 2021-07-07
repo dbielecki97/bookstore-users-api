@@ -109,6 +109,25 @@ func Search(c *gin.Context) {
 	c.JSON(http.StatusOK, results)
 }
 
+func Login(c *gin.Context) {
+	var r users.LoginRequest
+	if err := c.ShouldBindJSON(&r); err != nil {
+		restErr := errors.NewBadRequestError("invalid json body")
+		c.JSON(restErr.StatusCode, restErr)
+		return
+	}
+
+	var u *users.User
+	var err *errors.RestErr
+	if u, err = services.UserService.FindByEmail(r); err != nil {
+		c.JSON(err.StatusCode, err)
+		return
+	}
+
+	u.HideFields(c.GetHeader("X-Public") == "true")
+	c.JSON(http.StatusOK, u)
+}
+
 func getUserId(param string) (int64, *errors.RestErr) {
 	userId, err := strconv.ParseInt(param, 10, 64)
 	if err != nil {

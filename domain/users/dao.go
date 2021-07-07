@@ -1,6 +1,7 @@
 package users
 
 import (
+	"database/sql"
 	"fmt"
 	"github.com/dbielecki97/bookstore-users-api/datasource/mysql/userdb"
 	"github.com/dbielecki97/bookstore-users-api/logger"
@@ -8,11 +9,13 @@ import (
 )
 
 const (
-	insertUser       = "INSERT INTO users(first_name, last_name, email, date_created, password, status) VALUES(?, ?, ?, ?, ?, ?);"
-	getUser          = "SELECT id, first_name, last_name, email, date_created, status FROM users WHERE id = ?;"
-	updateUser       = "UPDATE users SET first_name = ?, last_name = ?, email = ?, password = ? WHERE id = ?;"
-	deleteUser       = "DELETE FROM users where id = ?;"
-	findUserByStatus = "SELECT id, first_name, last_name, email, date_created, status FROM users WHERE status = ?;"
+	insertUser             = "INSERT INTO users(first_name, last_name, email, date_created, password, status) VALUES(?, ?, ?, ?, ?, ?);"
+	getUser                = "SELECT id, first_name, last_name, email, date_created, status FROM users WHERE id = ?;"
+	updateUser             = "UPDATE users SET first_name = ?, last_name = ?, email = ?, password = ? WHERE id = ?;"
+	deleteUser             = "DELETE FROM users where id = ?;"
+	findByStatus           = "SELECT id, first_name, last_name, email, date_created, status FROM users WHERE status = ?;"
+	findByEmailAndPassword = "SELECT id, first_name, last_name, email, date_created, status from users where email = ? and password = ?;"
+	findByEmail            = "SELECT id, first_name, last_name, email, date_created, status, password from users where email = ?;"
 )
 
 func (u *User) Get() *errors.RestErr {
@@ -29,6 +32,9 @@ func (u *User) Get() *errors.RestErr {
 
 	row := stmt.QueryRowx(u.ID)
 	if err := row.StructScan(u); err != nil {
+		if err == sql.ErrNoRows {
+			return errors.NewNotFoundError(fmt.Sprintf("user with id %d not found", u.ID))
+		}
 		logger.Error("error when trying to get user by id", err)
 		return errors.NewInternalServerError("database error")
 	}
@@ -98,7 +104,7 @@ func (u *User) Delete() *errors.RestErr {
 }
 
 func (u *User) FindByStatus(status string) ([]User, *errors.RestErr) {
-	stmt, err := userdb.Client.Preparex(findUserByStatus)
+	stmt, err := userdb.Client.Preparex(findByStatus)
 	if err != nil {
 		logger.Error("error when trying to prepare find users by status statement", err)
 		return nil, errors.NewInternalServerError("database error")
@@ -128,4 +134,52 @@ func (u *User) FindByStatus(status string) ([]User, *errors.RestErr) {
 	}
 
 	return results, nil
+}
+
+func (u *User) FindByEmailAndPassword() *errors.RestErr {
+	if err := userdb.Client.Ping(); err != nil {
+		panic(err)
+	}
+
+	stmt, err := userdb.Client.Preparex(findByEmailAndPassword)
+	if err != nil {
+		logger.Error("error when trying to prepare get user statement", err)
+		return errors.NewInternalServerError("database error")
+	}
+	defer stmt.Close()
+
+	row := stmt.QueryRowx(u.Email, u.Password)
+	if err := row.StructScan(u); err != nil {
+		if err == sql.ErrNoRows {
+			return errors.NewNotFoundError(fmt.Sprintf("invalid email or password"))
+		}
+		logger.Error("error when trying to get user by email and password", err)
+		return errors.NewInternalServerError("database error")
+	}
+
+	return nil
+}
+
+func (u *User) FindByEmail() *errors.RestErr {
+	if err := userdb.Client.Ping(); err != nil {
+		panic(err)
+	}
+
+	stmt, err := userdb.Client.Preparex(findByEmail)
+	if err != nil {
+		logger.Error("error when trying to prepare get user statement", err)
+		return errors.NewInternalServerError("database error")
+	}
+	defer stmt.Close()
+
+	row := stmt.QueryRowx(u.Email)
+	if err := row.StructScan(u); err != nil {
+		if err == sql.ErrNoRows {
+			return errors.NewAuthenticationError("invalid credentials")
+		}
+		logger.Error("error when trying to get user by email", err)
+		return errors.NewInternalServerError("database error")
+	}
+
+	return nil
 }
