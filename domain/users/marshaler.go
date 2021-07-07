@@ -1,6 +1,6 @@
 package users
 
-func (u *User) HideFields(isPublic bool) {
+func (u *User) Marshall(isPublic bool) *User {
 	u.Password = ""
 
 	if isPublic {
@@ -8,13 +8,14 @@ func (u *User) HideFields(isPublic bool) {
 		u.LastName = ""
 		u.Email = ""
 	}
+
+	return u
 }
 
-func (users Users) HideFields(isPublic bool) Users {
+func (users Users) Marshall(isPublic bool) Users {
 	results := make(Users, 0)
 	for _, u := range users {
-		u.HideFields(isPublic)
-		results = append(results, u)
+		results = append(results, *u.Marshall(isPublic))
 	}
 
 	return results

@@ -1,9 +1,10 @@
 package user
 
 import (
+	"github.com/dbielecki97/bookstore-oauth-go/oauth"
 	"github.com/dbielecki97/bookstore-users-api/domain/users"
 	"github.com/dbielecki97/bookstore-users-api/services"
-	"github.com/dbielecki97/bookstore-users-api/utils/errors"
+	"github.com/dbielecki97/bookstore-utils-go/errors"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
@@ -23,25 +24,34 @@ func Create(c *gin.Context) {
 		c.JSON(err.StatusCode, err)
 		return
 	}
-	result.HideFields(c.GetHeader("X-Public") == "true")
+	result.Marshall(c.GetHeader("X-Public") == "true")
 	c.JSON(http.StatusCreated, result)
 }
 
 func Get(c *gin.Context) {
+	if err := oauth.AuthenticateRequest(c.Request); err != nil {
+		c.JSON(err.StatusCode, err)
+		return
+	}
+
 	userId, idErr := getUserId(c.Param("user_id"))
 	if idErr != nil {
 		c.JSON(idErr.StatusCode, idErr)
 		return
 	}
 
-	result, restErr := services.UserService.GetUser(userId)
+	user, restErr := services.UserService.GetUser(userId)
 	if restErr != nil {
 		c.JSON(restErr.StatusCode, restErr)
 		return
 	}
 
-	result.HideFields(c.GetHeader("X-Public") == "true")
-	c.JSON(http.StatusOK, result)
+	if oauth.GetCallerId(c.Request) == user.ID {
+		c.JSON(http.StatusOK, user.Marshall(false))
+		return
+	}
+
+	c.JSON(http.StatusOK, user.Marshall(oauth.IsPublic(c.Request)))
 }
 
 func Update(c *gin.Context) {
@@ -77,8 +87,7 @@ func Update(c *gin.Context) {
 		}
 	}
 
-	result.HideFields(c.GetHeader("X-Public") == "true")
-	c.JSON(http.StatusOK, result)
+	c.JSON(http.StatusOK, result.Marshall(oauth.IsPublic(c.Request)))
 }
 
 func Delete(c *gin.Context) {
@@ -105,8 +114,7 @@ func Search(c *gin.Context) {
 		return
 	}
 
-	results = results.HideFields(c.GetHeader("X-Public") == "true")
-	c.JSON(http.StatusOK, results)
+	c.JSON(http.StatusOK, results.Marshall(oauth.IsPublic(c.Request)))
 }
 
 func Login(c *gin.Context) {
@@ -124,8 +132,7 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	u.HideFields(c.GetHeader("X-Public") == "true")
-	c.JSON(http.StatusOK, u)
+	c.JSON(http.StatusOK, u.Marshall(oauth.IsPublic(c.Request)))
 }
 
 func getUserId(param string) (int64, *errors.RestErr) {

@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/dbielecki97/bookstore-users-api/datasource/mysql/userdb"
-	"github.com/dbielecki97/bookstore-users-api/logger"
-	"github.com/dbielecki97/bookstore-users-api/utils/errors"
+	"github.com/dbielecki97/bookstore-utils-go/errors"
+	"github.com/dbielecki97/bookstore-utils-go/logger"
 )
 
 const (

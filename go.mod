@@ -2,8 +2,13 @@ module github.com/dbielecki97/bookstore-users-api
 
 go 1.16
 
+replace github.com/dbielecki97/bookstore-oauth-go => ../bookstore-oauth-go
+
+replace github.com/dbielecki97/bookstore-utils-go => ../bookstore-utils-go
+
 require (
-	github.com/VividCortex/mysqlerr v1.0.0 // indirect
+	github.com/dbielecki97/bookstore-oauth-go v1.0.0
+	github.com/dbielecki97/bookstore-utils-go v1.0.1
 	github.com/gin-gonic/gin v1.7.2
 	github.com/go-playground/validator/v10 v10.6.1 // indirect
 	github.com/go-sql-driver/mysql v1.6.0
@@ -17,10 +22,7 @@ require (
 	github.com/ugorji/go v1.2.6 // indirect
 	go.uber.org/atomic v1.8.0 // indirect
 	go.uber.org/multierr v1.7.0 // indirect
-	go.uber.org/zap v1.18.1 // indirect
-	golang.org/x/crypto v0.0.0-20210616213533-5ff15b29337e // indirect
 	golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c // indirect
-	golang.org/x/text v0.3.6 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )

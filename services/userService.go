@@ -2,9 +2,9 @@ package services
 
 import (
 	"github.com/dbielecki97/bookstore-users-api/domain/users"
-	"github.com/dbielecki97/bookstore-users-api/utils/date"
-	"github.com/dbielecki97/bookstore-users-api/utils/errors"
-	"github.com/dbielecki97/bookstore-users-api/utils/pass"
+	"github.com/dbielecki97/bookstore-utils-go/crypto"
+	"github.com/dbielecki97/bookstore-utils-go/date"
+	"github.com/dbielecki97/bookstore-utils-go/errors"
 )
 
 var (
@@ -30,7 +30,7 @@ func (s *defaultUserService) CreateUser(user users.User) (*users.User, *errors.R
 
 	user.DateCreated = date.GetNowDBString()
 	user.Status = users.StatusActive
-	enPass, err := pass.Generate(user.Password)
+	enPass, err := crypto.Generate(user.Password)
 	if err != nil {
 		return nil, errors.NewInternalServerError("error processing request")
 	}
@@ -115,7 +115,7 @@ func (s *defaultUserService) FindByEmail(r users.LoginRequest) (*users.User, *er
 		return nil, err
 	}
 
-	err := pass.Compare(u.Password, r.Password)
+	err := crypto.Compare(u.Password, r.Password)
 	if err != nil {
 		return nil, errors.NewAuthenticationError("invalid credentials")
 	}
