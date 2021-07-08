@@ -2,9 +2,9 @@ package userdb
 
 import (
 	"fmt"
+	"github.com/dbielecki97/bookstore-utils-go/logger"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
-	"log"
 	"os"
 )
 
@@ -39,6 +39,5 @@ func init() {
 	if err = Client.Ping(); err != nil {
 		panic(err)
 	}
-
-	log.Println("database successfully configured")
+	logger.Info("database successfully configured")
 }

@@ -8,7 +8,7 @@ replace github.com/dbielecki97/bookstore-utils-go => ../bookstore-utils-go
 
 require (
 	github.com/dbielecki97/bookstore-oauth-go v1.0.0
-	github.com/dbielecki97/bookstore-utils-go v1.0.1
+	github.com/dbielecki97/bookstore-utils-go v1.0.5
 	github.com/gin-gonic/gin v1.7.2
 	github.com/go-playground/validator/v10 v10.6.1 // indirect
 	github.com/go-sql-driver/mysql v1.6.0

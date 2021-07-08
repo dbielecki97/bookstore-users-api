@@ -4,7 +4,7 @@ import (
 	"github.com/dbielecki97/bookstore-oauth-go/oauth"
 	"github.com/dbielecki97/bookstore-users-api/domain/users"
 	"github.com/dbielecki97/bookstore-users-api/services"
-	"github.com/dbielecki97/bookstore-utils-go/errors"
+	"github.com/dbielecki97/bookstore-utils-go/errs"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
@@ -14,7 +14,7 @@ func Create(c *gin.Context) {
 	var user users.User
 
 	if err := c.ShouldBindJSON(&user); err != nil {
-		restErr := errors.NewBadRequestError("invalid JSON body")
+		restErr := errs.NewBadRequestErr("invalid JSON body")
 		c.JSON(restErr.StatusCode, restErr)
 		return
 	}
@@ -64,14 +64,14 @@ func Update(c *gin.Context) {
 	var user users.User
 
 	if err := c.ShouldBindJSON(&user); err != nil {
-		restErr := errors.NewBadRequestError("invalid JSON body")
+		restErr := errs.NewBadRequestErr("invalid JSON body")
 		c.JSON(restErr.StatusCode, restErr)
 		return
 	}
 
 	user.ID = userId
 
-	var restErr *errors.RestErr
+	var restErr *errs.RestErr
 	var result *users.User
 	if c.Request.Method == http.MethodPatch {
 		result, restErr = services.UserService.PatchUser(user)
@@ -120,13 +120,13 @@ func Search(c *gin.Context) {
 func Login(c *gin.Context) {
 	var r users.LoginRequest
 	if err := c.ShouldBindJSON(&r); err != nil {
-		restErr := errors.NewBadRequestError("invalid json body")
+		restErr := errs.NewBadRequestErr("invalid json body")
 		c.JSON(restErr.StatusCode, restErr)
 		return
 	}
 
 	var u *users.User
-	var err *errors.RestErr
+	var err *errs.RestErr
 	if u, err = services.UserService.FindByEmail(r); err != nil {
 		c.JSON(err.StatusCode, err)
 		return
@@ -135,10 +135,10 @@ func Login(c *gin.Context) {
 	c.JSON(http.StatusOK, u.Marshall(oauth.IsPublic(c.Request)))
 }
 
-func getUserId(param string) (int64, *errors.RestErr) {
+func getUserId(param string) (int64, *errs.RestErr) {
 	userId, err := strconv.ParseInt(param, 10, 64)
 	if err != nil {
-		restErr := errors.NewBadRequestError("invalid user id")
+		restErr := errs.NewBadRequestErr("invalid user id")
 
 		return 0, restErr
 	}

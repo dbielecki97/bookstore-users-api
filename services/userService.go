@@ -4,7 +4,7 @@ import (
 	"github.com/dbielecki97/bookstore-users-api/domain/users"
 	"github.com/dbielecki97/bookstore-utils-go/crypto"
 	"github.com/dbielecki97/bookstore-utils-go/date"
-	"github.com/dbielecki97/bookstore-utils-go/errors"
+	"github.com/dbielecki97/bookstore-utils-go/errs"
 )
 
 var (
@@ -12,18 +12,18 @@ var (
 )
 
 type userService interface {
-	CreateUser(user users.User) (*users.User, *errors.RestErr)
-	GetUser(userId int64) (*users.User, *errors.RestErr)
-	UpdateUser(u users.User) (*users.User, *errors.RestErr)
-	PatchUser(u users.User) (*users.User, *errors.RestErr)
-	DeleteUser(userId int64) *errors.RestErr
-	Search(status string) (users.Users, *errors.RestErr)
-	FindByEmail(users.LoginRequest) (*users.User, *errors.RestErr)
+	CreateUser(user users.User) (*users.User, *errs.RestErr)
+	GetUser(userId int64) (*users.User, *errs.RestErr)
+	UpdateUser(u users.User) (*users.User, *errs.RestErr)
+	PatchUser(u users.User) (*users.User, *errs.RestErr)
+	DeleteUser(userId int64) *errs.RestErr
+	Search(status string) (users.Users, *errs.RestErr)
+	FindByEmail(users.LoginRequest) (*users.User, *errs.RestErr)
 }
 
 type defaultUserService struct{}
 
-func (s *defaultUserService) CreateUser(user users.User) (*users.User, *errors.RestErr) {
+func (s *defaultUserService) CreateUser(user users.User) (*users.User, *errs.RestErr) {
 	if err := user.Validate(); err != nil {
 		return nil, err
 	}
@@ -32,7 +32,7 @@ func (s *defaultUserService) CreateUser(user users.User) (*users.User, *errors.R
 	user.Status = users.StatusActive
 	enPass, err := crypto.Generate(user.Password)
 	if err != nil {
-		return nil, errors.NewInternalServerError("error processing request")
+		return nil, errs.NewInternalServerErr("error processing request", err)
 	}
 	user.Password = enPass
 
@@ -43,7 +43,7 @@ func (s *defaultUserService) CreateUser(user users.User) (*users.User, *errors.R
 	return &user, nil
 }
 
-func (s *defaultUserService) GetUser(userId int64) (*users.User, *errors.RestErr) {
+func (s *defaultUserService) GetUser(userId int64) (*users.User, *errs.RestErr) {
 	result := users.User{ID: userId}
 	if err := result.Get(); err != nil {
 		return nil, err
@@ -52,7 +52,7 @@ func (s *defaultUserService) GetUser(userId int64) (*users.User, *errors.RestErr
 	return &result, nil
 }
 
-func (s *defaultUserService) UpdateUser(u users.User) (*users.User, *errors.RestErr) {
+func (s *defaultUserService) UpdateUser(u users.User) (*users.User, *errs.RestErr) {
 	cur, err := s.GetUser(u.ID)
 	if err != nil {
 		return nil, err
@@ -73,7 +73,7 @@ func (s *defaultUserService) UpdateUser(u users.User) (*users.User, *errors.Rest
 	return cur, nil
 }
 
-func (s *defaultUserService) PatchUser(u users.User) (*users.User, *errors.RestErr) {
+func (s *defaultUserService) PatchUser(u users.User) (*users.User, *errs.RestErr) {
 	cur, err := s.GetUser(u.ID)
 	if err != nil {
 		return nil, err
@@ -98,17 +98,17 @@ func (s *defaultUserService) PatchUser(u users.User) (*users.User, *errors.RestE
 	return cur, nil
 }
 
-func (s *defaultUserService) DeleteUser(userId int64) *errors.RestErr {
+func (s *defaultUserService) DeleteUser(userId int64) *errs.RestErr {
 	user := users.User{ID: userId}
 	return user.Delete()
 }
 
-func (s *defaultUserService) Search(status string) (users.Users, *errors.RestErr) {
+func (s *defaultUserService) Search(status string) (users.Users, *errs.RestErr) {
 	dao := &users.User{}
 	return dao.FindByStatus(status)
 }
 
-func (s *defaultUserService) FindByEmail(r users.LoginRequest) (*users.User, *errors.RestErr) {
+func (s *defaultUserService) FindByEmail(r users.LoginRequest) (*users.User, *errs.RestErr) {
 	u := &users.User{Email: r.Email}
 
 	if err := u.FindByEmail(); err != nil {
@@ -117,7 +117,7 @@ func (s *defaultUserService) FindByEmail(r users.LoginRequest) (*users.User, *er
 
 	err := crypto.Compare(u.Password, r.Password)
 	if err != nil {
-		return nil, errors.NewAuthenticationError("invalid credentials")
+		return nil, errs.NewAuthenticationErr("invalid credentials")
 	}
 
 	return u, nil
