@@ -12,18 +12,18 @@ var (
 )
 
 type userService interface {
-	CreateUser(user users.User) (*users.User, *errs.RestErr)
-	GetUser(userId int64) (*users.User, *errs.RestErr)
-	UpdateUser(u users.User) (*users.User, *errs.RestErr)
-	PatchUser(u users.User) (*users.User, *errs.RestErr)
-	DeleteUser(userId int64) *errs.RestErr
-	Search(status string) (users.Users, *errs.RestErr)
-	FindByEmail(users.LoginRequest) (*users.User, *errs.RestErr)
+	CreateUser(user users.User) (*users.User, errs.RestErr)
+	GetUser(userId int64) (*users.User, errs.RestErr)
+	UpdateUser(u users.User) (*users.User, errs.RestErr)
+	PatchUser(u users.User) (*users.User, errs.RestErr)
+	DeleteUser(userId int64) errs.RestErr
+	Search(status string) (users.Users, errs.RestErr)
+	FindByEmail(users.LoginRequest) (*users.User, errs.RestErr)
 }
 
 type defaultUserService struct{}
 
-func (s *defaultUserService) CreateUser(user users.User) (*users.User, *errs.RestErr) {
+func (s *defaultUserService) CreateUser(user users.User) (*users.User, errs.RestErr) {
 	if err := user.Validate(); err != nil {
 		return nil, err
 	}
@@ -43,7 +43,7 @@ func (s *defaultUserService) CreateUser(user users.User) (*users.User, *errs.Res
 	return &user, nil
 }
 
-func (s *defaultUserService) GetUser(userId int64) (*users.User, *errs.RestErr) {
+func (s *defaultUserService) GetUser(userId int64) (*users.User, errs.RestErr) {
 	result := users.User{ID: userId}
 	if err := result.Get(); err != nil {
 		return nil, err
@@ -52,7 +52,7 @@ func (s *defaultUserService) GetUser(userId int64) (*users.User, *errs.RestErr) 
 	return &result, nil
 }
 
-func (s *defaultUserService) UpdateUser(u users.User) (*users.User, *errs.RestErr) {
+func (s *defaultUserService) UpdateUser(u users.User) (*users.User, errs.RestErr) {
 	cur, err := s.GetUser(u.ID)
 	if err != nil {
 		return nil, err
@@ -73,7 +73,7 @@ func (s *defaultUserService) UpdateUser(u users.User) (*users.User, *errs.RestEr
 	return cur, nil
 }
 
-func (s *defaultUserService) PatchUser(u users.User) (*users.User, *errs.RestErr) {
+func (s *defaultUserService) PatchUser(u users.User) (*users.User, errs.RestErr) {
 	cur, err := s.GetUser(u.ID)
 	if err != nil {
 		return nil, err
@@ -98,17 +98,17 @@ func (s *defaultUserService) PatchUser(u users.User) (*users.User, *errs.RestErr
 	return cur, nil
 }
 
-func (s *defaultUserService) DeleteUser(userId int64) *errs.RestErr {
+func (s *defaultUserService) DeleteUser(userId int64) errs.RestErr {
 	user := users.User{ID: userId}
 	return user.Delete()
 }
 
-func (s *defaultUserService) Search(status string) (users.Users, *errs.RestErr) {
+func (s *defaultUserService) Search(status string) (users.Users, errs.RestErr) {
 	dao := &users.User{}
 	return dao.FindByStatus(status)
 }
 
-func (s *defaultUserService) FindByEmail(r users.LoginRequest) (*users.User, *errs.RestErr) {
+func (s *defaultUserService) FindByEmail(r users.LoginRequest) (*users.User, errs.RestErr) {
 	u := &users.User{Email: r.Email}
 
 	if err := u.FindByEmail(); err != nil {

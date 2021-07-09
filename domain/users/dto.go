@@ -21,7 +21,7 @@ type User struct {
 	Password    string `json:"password,omitempty"`
 }
 
-func (u *User) Validate() *errs.RestErr {
+func (u *User) Validate() errs.RestErr {
 	u.FirstName = strings.TrimSpace(u.FirstName)
 	u.LastName = strings.TrimSpace(u.LastName)
 

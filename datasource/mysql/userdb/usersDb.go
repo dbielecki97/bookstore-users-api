@@ -3,6 +3,7 @@ package userdb
 import (
 	"fmt"
 	"github.com/dbielecki97/bookstore-utils-go/logger"
+	"github.com/go-sql-driver/mysql"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 	"os"
@@ -38,6 +39,11 @@ func init() {
 
 	if err = Client.Ping(); err != nil {
 		panic(err)
+	}
+
+	err = mysql.SetLogger(logger.GetLogger())
+	if err != nil {
+		logger.Error("could not set up logger for mysql", err)
 	}
 	logger.Info("database successfully configured")
 }

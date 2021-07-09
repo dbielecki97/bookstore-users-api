@@ -15,13 +15,13 @@ func Create(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&user); err != nil {
 		restErr := errs.NewBadRequestErr("invalid JSON body")
-		c.JSON(restErr.StatusCode, restErr)
+		c.JSON(restErr.StatusCode(), restErr)
 		return
 	}
 
 	result, err := services.UserService.CreateUser(user)
 	if err != nil {
-		c.JSON(err.StatusCode, err)
+		c.JSON(err.StatusCode(), err)
 		return
 	}
 	result.Marshall(c.GetHeader("X-Public") == "true")
@@ -30,19 +30,19 @@ func Create(c *gin.Context) {
 
 func Get(c *gin.Context) {
 	if err := oauth.AuthenticateRequest(c.Request); err != nil {
-		c.JSON(err.StatusCode, err)
+		c.JSON(err.StatusCode(), err)
 		return
 	}
 
 	userId, idErr := getUserId(c.Param("user_id"))
 	if idErr != nil {
-		c.JSON(idErr.StatusCode, idErr)
+		c.JSON(idErr.StatusCode(), idErr)
 		return
 	}
 
 	user, restErr := services.UserService.GetUser(userId)
 	if restErr != nil {
-		c.JSON(restErr.StatusCode, restErr)
+		c.JSON(restErr.StatusCode(), restErr)
 		return
 	}
 
@@ -57,7 +57,7 @@ func Get(c *gin.Context) {
 func Update(c *gin.Context) {
 	userId, idErr := getUserId(c.Param("user_id"))
 	if idErr != nil {
-		c.JSON(idErr.StatusCode, idErr)
+		c.JSON(idErr.StatusCode(), idErr)
 		return
 	}
 
@@ -65,24 +65,24 @@ func Update(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&user); err != nil {
 		restErr := errs.NewBadRequestErr("invalid JSON body")
-		c.JSON(restErr.StatusCode, restErr)
+		c.JSON(restErr.StatusCode(), restErr)
 		return
 	}
 
 	user.ID = userId
 
-	var restErr *errs.RestErr
+	var restErr errs.RestErr
 	var result *users.User
 	if c.Request.Method == http.MethodPatch {
 		result, restErr = services.UserService.PatchUser(user)
 		if restErr != nil {
-			c.JSON(restErr.StatusCode, restErr)
+			c.JSON(restErr.StatusCode(), restErr)
 			return
 		}
 	} else {
 		result, restErr = services.UserService.UpdateUser(user)
 		if restErr != nil {
-			c.JSON(restErr.StatusCode, restErr)
+			c.JSON(restErr.StatusCode(), restErr)
 			return
 		}
 	}
@@ -93,12 +93,12 @@ func Update(c *gin.Context) {
 func Delete(c *gin.Context) {
 	userId, idErr := getUserId(c.Param("user_id"))
 	if idErr != nil {
-		c.JSON(idErr.StatusCode, idErr)
+		c.JSON(idErr.StatusCode(), idErr)
 		return
 	}
 
 	if err := services.UserService.DeleteUser(userId); err != nil {
-		c.JSON(err.StatusCode, err)
+		c.JSON(err.StatusCode(), err)
 		return
 
 	}
@@ -110,7 +110,7 @@ func Search(c *gin.Context) {
 
 	results, err := services.UserService.Search(status)
 	if err != nil {
-		c.JSON(err.StatusCode, err)
+		c.JSON(err.StatusCode(), err)
 		return
 	}
 
@@ -121,21 +121,21 @@ func Login(c *gin.Context) {
 	var r users.LoginRequest
 	if err := c.ShouldBindJSON(&r); err != nil {
 		restErr := errs.NewBadRequestErr("invalid json body")
-		c.JSON(restErr.StatusCode, restErr)
+		c.JSON(restErr.StatusCode(), restErr)
 		return
 	}
 
 	var u *users.User
-	var err *errs.RestErr
+	var err errs.RestErr
 	if u, err = services.UserService.FindByEmail(r); err != nil {
-		c.JSON(err.StatusCode, err)
+		c.JSON(err.StatusCode(), err)
 		return
 	}
 
 	c.JSON(http.StatusOK, u.Marshall(oauth.IsPublic(c.Request)))
 }
 
-func getUserId(param string) (int64, *errs.RestErr) {
+func getUserId(param string) (int64, errs.RestErr) {
 	userId, err := strconv.ParseInt(param, 10, 64)
 	if err != nil {
 		restErr := errs.NewBadRequestErr("invalid user id")

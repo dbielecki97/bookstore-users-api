@@ -12,5 +12,5 @@ var (
 func StartApplication() {
 	createUrlMappings()
 	logger.Info("about to start the application...")
-	router.Run(":8080")
+	logger.Fatal("could not start server", router.Run(":8080"))
 }

@@ -7,19 +7,21 @@ import (
 	"github.com/dbielecki97/bookstore-users-api/datasource/mysql/userdb"
 	"github.com/dbielecki97/bookstore-utils-go/errs"
 	"github.com/dbielecki97/bookstore-utils-go/logger"
+	"strings"
 )
 
 const (
-	insertUser             = "INSERT INTO users(first_name, last_name, email, date_created, password, status) VALUES(?, ?, ?, ?, ?, ?);"
-	getUser                = "SELECT id, first_name, last_name, email, date_created, status FROM users WHERE id = ?;"
-	updateUser             = "UPDATE users SET first_name = ?, last_name = ?, email = ?, password = ? WHERE id = ?;"
-	deleteUser             = "DELETE FROM users where id = ?;"
-	findByStatus           = "SELECT id, first_name, last_name, email, date_created, status FROM users WHERE status = ?;"
-	findByEmailAndPassword = "SELECT id, first_name, last_name, email, date_created, status from users where email = ? and password = ?;"
-	findByEmail            = "SELECT id, first_name, last_name, email, date_created, status, password from users where email = ?;"
+	insertUser   = "INSERT INTO users(first_name, last_name, email, date_created, password, status) VALUES(?, ?, ?, ?, ?, ?);"
+	getUser      = "SELECT id, first_name, last_name, email, date_created, status FROM users WHERE id = ?;"
+	updateUser   = "UPDATE users SET first_name = ?, last_name = ?, email = ?, password = ? WHERE id = ?;"
+	deleteUser   = "DELETE FROM users where id = ?;"
+	findByStatus = "SELECT id, first_name, last_name, email, date_created, status FROM users WHERE status = ?;"
+	findByEmail  = "SELECT id, first_name, last_name, email, date_created, status, password from users where email = ?;"
+
+	errDupEntry = "1062"
 )
 
-func (u *User) Get() *errs.RestErr {
+func (u *User) Get() errs.RestErr {
 	if err := userdb.Client.Ping(); err != nil {
 		panic(err)
 	}
@@ -43,7 +45,7 @@ func (u *User) Get() *errs.RestErr {
 	return nil
 }
 
-func (u *User) Save() *errs.RestErr {
+func (u *User) Save() errs.RestErr {
 	stmt, err := userdb.Client.Prepare(insertUser)
 	if err != nil {
 		logger.Error("error when trying to prepare save user statement", err)
@@ -54,6 +56,10 @@ func (u *User) Save() *errs.RestErr {
 	result, err := stmt.Exec(u.FirstName, u.LastName, u.Email, u.DateCreated, u.Password, u.Status)
 	if err != nil {
 		logger.Error("error when trying to save user", err)
+
+		if strings.Contains(err.Error(), errDupEntry) {
+			return errs.NewBadRequestErr("email already registered")
+		}
 		return errs.NewInternalServerErr("could not save user", errors.New("database error"))
 	}
 
@@ -69,7 +75,7 @@ func (u *User) Save() *errs.RestErr {
 	return nil
 }
 
-func (u *User) Update() *errs.RestErr {
+func (u *User) Update() errs.RestErr {
 	stmt, err := userdb.Client.Prepare(updateUser)
 	if err != nil {
 		logger.Error("error when trying to prepare update user statement", err)
@@ -87,7 +93,7 @@ func (u *User) Update() *errs.RestErr {
 	return nil
 }
 
-func (u *User) Delete() *errs.RestErr {
+func (u *User) Delete() errs.RestErr {
 	stmt, err := userdb.Client.Prepare(deleteUser)
 	if err != nil {
 		logger.Error("error when trying to prepare delete user statement", err)
@@ -104,7 +110,7 @@ func (u *User) Delete() *errs.RestErr {
 	return nil
 }
 
-func (u *User) FindByStatus(status string) ([]User, *errs.RestErr) {
+func (u *User) FindByStatus(status string) ([]User, errs.RestErr) {
 	stmt, err := userdb.Client.Preparex(findByStatus)
 	if err != nil {
 		logger.Error("error when trying to prepare find users by status statement", err)
@@ -137,7 +143,7 @@ func (u *User) FindByStatus(status string) ([]User, *errs.RestErr) {
 	return results, nil
 }
 
-func (u *User) FindByEmail() *errs.RestErr {
+func (u *User) FindByEmail() errs.RestErr {
 	if err := userdb.Client.Ping(); err != nil {
 		panic(err)
 	}
